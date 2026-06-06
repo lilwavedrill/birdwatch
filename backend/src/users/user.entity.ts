@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   OneToMany,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Observation } from '../observations/observation.entity';
 import { Favorite } from '../favorites/favorite.entity';
 
@@ -24,7 +25,8 @@ export class User {
   @Column({ unique: true, length: 255 })
   email: string;
 
-  @Column()
+  @Exclude()
+  @Column({ select: false })
   password: string;
 
   @Column({ nullable: true })
