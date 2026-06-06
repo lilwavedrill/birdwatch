@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
 function CatalogPage() {
+  const { user } = useAuth();
   const [birds, setBirds] = useState([]);
   const [species, setSpecies] = useState([]);
   const [habitats, setHabitats] = useState([]);
   const [search, setSearch] = useState('');
   const [filterSpecies, setFilterSpecies] = useState('');
   const [filterHabitat, setFilterHabitat] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [newBird, setNewBird] = useState({ name: '', description: '', speciesId: '', habitatId: '', wingspan: '', weight: '' });
+  const [formMsg, setFormMsg] = useState('');
+
+  const loadBirds = () => {
+    const params = {};
+    if (search) params.search = search;
+    if (filterSpecies) params.speciesId = filterSpecies;
+    if (filterHabitat) params.habitatId = filterHabitat;
+    api.get('/birds', { params }).then(r => setBirds(r.data)).catch(() => {});
+  };
 
   useEffect(() => {
     api.get('/species').then(r => setSpecies(r.data)).catch(() => {});
@@ -16,16 +29,62 @@ function CatalogPage() {
   }, []);
 
   useEffect(() => {
-    const params = {};
-    if (search) params.search = search;
-    if (filterSpecies) params.speciesId = filterSpecies;
-    if (filterHabitat) params.habitatId = filterHabitat;
-    api.get('/birds', { params }).then(r => setBirds(r.data)).catch(() => {});
+    loadBirds();
   }, [search, filterSpecies, filterHabitat]);
+
+  const handleAddBird = async (e) => {
+    e.preventDefault();
+    setFormMsg('');
+    if (!newBird.name.trim()) { setFormMsg('Введите название'); return; }
+    try {
+      const payload = { name: newBird.name };
+      if (newBird.description) payload.description = newBird.description;
+      if (newBird.speciesId) payload.speciesId = Number(newBird.speciesId);
+      if (newBird.habitatId) payload.habitatId = Number(newBird.habitatId);
+      if (newBird.wingspan) payload.wingspan = Number(newBird.wingspan);
+      if (newBird.weight) payload.weight = Number(newBird.weight);
+      await api.post('/birds', payload);
+      setNewBird({ name: '', description: '', speciesId: '', habitatId: '', wingspan: '', weight: '' });
+      setShowForm(false);
+      setFormMsg('');
+      loadBirds();
+    } catch (err) {
+      setFormMsg(err.response?.data?.message || 'Ошибка добавления');
+    }
+  };
 
   return (
     <div className="container">
-      <h2 style={{ color: '#2d5016', marginBottom: '1rem' }}>Каталог птиц</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2 style={{ color: '#2d5016', margin: 0 }}>Каталог птиц</h2>
+        {user && (
+          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Скрыть' : '+ Добавить птицу'}
+          </button>
+        )}
+      </div>
+
+      {showForm && user && (
+        <form onSubmit={handleAddBird} style={{ background: '#f9f9f9', padding: '1.2rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #ddd' }}>
+          <h3 style={{ marginTop: 0, color: '#2d5016' }}>Новая птица</h3>
+          {formMsg && <p style={{ color: 'red' }}>{formMsg}</p>}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+            <input placeholder="Название *" value={newBird.name} onChange={e => setNewBird({...newBird, name: e.target.value})} style={{ padding: '0.5rem' }} />
+            <input placeholder="Описание" value={newBird.description} onChange={e => setNewBird({...newBird, description: e.target.value})} style={{ padding: '0.5rem' }} />
+            <select value={newBird.speciesId} onChange={e => setNewBird({...newBird, speciesId: e.target.value})} style={{ padding: '0.5rem' }}>
+              <option value="">— Вид —</option>
+              {species.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <select value={newBird.habitatId} onChange={e => setNewBird({...newBird, habitatId: e.target.value})} style={{ padding: '0.5rem' }}>
+              <option value="">— Среда обитания —</option>
+              {habitats.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+            </select>
+            <input placeholder="Размах крыльев (см)" type="number" value={newBird.wingspan} onChange={e => setNewBird({...newBird, wingspan: e.target.value})} style={{ padding: '0.5rem' }} />
+            <input placeholder="Масса (г)" type="number" value={newBird.weight} onChange={e => setNewBird({...newBird, weight: e.target.value})} style={{ padding: '0.5rem' }} />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>Добавить</button>
+        </form>
+      )}
 
       <div className="search-bar">
         <input

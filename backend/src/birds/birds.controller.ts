@@ -36,8 +36,7 @@ export class BirdsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateBirdDto) {
     return this.birdsService.create(dto);
   }
