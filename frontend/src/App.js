@@ -51,7 +51,7 @@ function App() {
       </Routes>
 
       <footer className="footer">
-        BirdWatch &copy; 2024 &mdash; Орнитологическая информационная система
+        BirdWatch &copy; 2026 &mdash; Орнитологическая информационная система
       </footer>
     </div>
   );
