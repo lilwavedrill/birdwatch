@@ -229,7 +229,8 @@ function AdminPage() {
 
   return (
     <div className="container">
-      <h2 style={{ color: '#2d5016', marginBottom: '1.5rem' }}>Панель администратора</h2>
+      <h2 style={{ color: '#2d5016', marginBottom: '0.5rem' }}>Панель администратора</h2>
+      <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.95rem' }}>Кривонос Никита Николаевич | БИВТ-24-1 | Вариант №16 «Птица»</p>
 
       <div className="admin-tabs">
         {['birds', 'users', 'species', 'habitats', 'observations', 'logs'].map(t => (
